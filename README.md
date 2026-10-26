@@ -24,6 +24,36 @@
 
 ![Demostración: código con un bug, pytest y el agente de proyecto](docs/assets/demo.gif)
 
+## Contexto y caché por proyecto
+
+DeepSeek cachea prefijos en el servidor. Para que acierte, esta configuración mantiene un **contexto estable por proyecto** y una **sesión persistente**, ambos en `.emacs-deepseek/` (ignorado por Git):
+
+```
+mi-proyecto/
+└── .emacs-deepseek/
+    ├── contexto.md   ← raíz, archivos, comandos y convenciones
+    └── proyecto.md   ← historial del agente
+```
+
+- `C-c I p` abre el agente; la primera vez crea `.emacs-deepseek/`.
+- `contexto.md` se inyecta en **todas** las llamadas a gptel dentro del proyecto. Si no hay proyecto, la llamada es normal.
+- `proyecto.md` conserva la conversación entre turnos y reinicios. `C-c I n` empieza una sesión nueva.
+- La cabecera muestra tokens y caché: `[443, C1.7k↑ 78↓]` (`C1.7k` = tokens cacheados).
+
+**Ejemplo real** (dos turnos en la misma sesión):
+
+| Turno | Entrada | Salida | Cacheados |
+|---|---|---|---|
+| 1 | 1765 | 120 | 0 |
+| 2 | 443 | 78 | **1664** |
+
+La segunda llamada reutilizó 1664 tokens del prefijo. El contexto local no es la caché (esa vive en DeepSeek); es lo que hace que el prefijo se repita y la caché acierte.
+
+```elisp
+(setq ia-proyecto-contexto t)  ; contexto en todas las llamadas
+(setq ia-proyecto-sesion t)    ; sesión persistente del agente
+```
+
 ## Qué incluye
 
 - **`emacs/init.el`** — configuración autocontenida (gptel + DeepSeek, LSP/Pyright, pytest, black, Magit, Forge, diff-hl, git-link).
@@ -73,6 +103,7 @@ Dentro de Emacs:
 | Prefijo | Para |
 |---|---|
 | `C-c I` | IA: explicar, tests, implementar, revisar, refactor, docstrings, corregir, agente |
+| `C-c I p` / `n` | Abrir el agente / empezar una sesión nueva |
 | `C-c P` | Python: ejecutar, pytest, black, lint, REPL |
 | `C-c G` | Git: status, commit, push, fetch, log, diff, rama, blame, stash, Forge |
 | `C-x g` | Magit status |
