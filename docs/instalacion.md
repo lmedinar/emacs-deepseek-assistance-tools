@@ -73,6 +73,8 @@ O deja que el repo lo haga por ti:
 .\scripts\setup.ps1 -Install      # Windows
 ```
 
+> `pyright` también se puede instalar sin npm global con `pipx install pyright`.
+
 ## 2. Clonar el repositorio
 
 ```bash

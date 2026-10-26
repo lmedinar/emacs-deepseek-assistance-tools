@@ -62,8 +62,8 @@ Write-Host "== Proyecto de práctica =="
 if (Test-Path $Practice) {
     Write-Host "  Ya existe: $Practice (no se toca)"
 } else {
-    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Practice) | Out-Null
-    Copy-Item -Recurse -Path (Join-Path $Root 'practice') -Destination $Practice
+    New-Item -ItemType Directory -Force -Path $Practice | Out-Null
+    Copy-Item -Path (Join-Path $Root 'practice\*') -Destination $Practice -Recurse -Force
     git -C $Practice init -q -b main
     git -C $Practice add .
     $name = if ($env:GIT_AUTHOR_NAME) { $env:GIT_AUTHOR_NAME } else { 'Práctica' }

@@ -79,12 +79,12 @@ fi
 
 echo
 echo "== Servidor de lenguaje (Pyright) =="
-if command -v npm >/dev/null 2>&1; then
-  run npm install -g pyright
-elif command -v pipx >/dev/null 2>&1; then
+if command -v pipx >/dev/null 2>&1; then
   run pipx install pyright
+elif command -v npm >/dev/null 2>&1; then
+  run npm install -g pyright
 else
-  echo "  Falta npm (Node.js) o pipx. Instala uno y luego: npm i -g pyright"
+  echo "  Falta pipx o npm. Instala uno y luego: pipx install pyright"
 fi
 
 echo

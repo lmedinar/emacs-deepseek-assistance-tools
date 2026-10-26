@@ -213,7 +213,7 @@ pyright --version
 Si falta algo:
 
 - `pytest` o `black` → `python3 -m pip install --user pytest black` (Windows: `py -m pip ...`).
-- `pyright` → `npm install -g pyright`.
+- `pyright` → `npm install -g pyright` o `pipx install pyright` (sin permisos de administrador).
 - `rg` → instálalo con `apt`, `brew` o `winget`.
 
 LSP no se “ejecuta” a mano: al abrir un `.py`, Emacs arranca `lsp-mode` + Pyright. La primera vez tarda unos segundos; verás `LSP` en la barra inferior. `C-c P l` abre la lista de diagnósticos. Si algo falla: `M-x lsp-workspace-restart`.

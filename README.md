@@ -131,6 +131,8 @@ O deja que el repo lo haga por ti:
 - Linux/macOS: `./scripts/install-deps.sh --yes`
 - Windows: `.\scripts\setup.ps1 -Install`
 
+> `pyright` también se puede instalar sin npm global con `pipx install pyright`.
+
 > En Windows usa `py` o `python`; la configuración detecta el ejecutable. Los scripts `.sh` requieren Git Bash/WSL; los equivalentes `.ps1` están incluidos.
 
 ## Inicio rápido
