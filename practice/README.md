@@ -20,4 +20,10 @@ python3 -m pytest -q
 ./scripts/reset.sh
 ```
 
+**Windows:**
+
+```powershell
+.\scripts\reset.ps1
+```
+
 El script hace `git reset --hard estado-inicial` y `git clean -fdx`, y deja el proyecto exactamente como al principio.

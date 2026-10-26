@@ -7,3 +7,9 @@ __pycache__/
 venv/
 *.egg-info/
 .emacs-deepseek/
+
+# Temporales de Emacs
+*~
+\#*#
+.#*
+*~undo-tree~
