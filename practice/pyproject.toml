@@ -1,0 +1,8 @@
+[project]
+name = "ia-python-practica"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

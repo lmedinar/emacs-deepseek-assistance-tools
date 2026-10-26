@@ -1,0 +1,25 @@
+# Claves y secretos
+*.key
+.env
+.authinfo
+.authinfo.gpg
+
+# Emacs
+*.elc
+elpa/
+eln-cache/
+auto-save-list/
+*.~undo-tree~
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Sistema
+.DS_Store
