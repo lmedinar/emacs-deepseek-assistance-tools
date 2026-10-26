@@ -1,13 +1,35 @@
-# Emacs + DeepSeek para programación asistida
+<p align="center">
+  <img src="docs/assets/hero.png" alt="Emacs + DeepSeek para programación asistida en Python" width="100%">
+</p>
 
-Guía práctica y configuración mínima de Emacs para programar Python con DeepSeek: chat, tests, refactor con diff, agente de proyecto y Git/GitHub.
+<h1 align="center">Emacs + DeepSeek</h1>
+<p align="center">Programación asistida en Python: chat, tests, refactor con diff, agente de proyecto y Git/GitHub.</p>
+
+<p align="center">
+  <img alt="Emacs" src="https://img.shields.io/badge/Emacs-29%2B-7F5AB6?logo=gnu-emacs&logoColor=white">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
+  <img alt="DeepSeek" src="https://img.shields.io/badge/DeepSeek-V4.1-4D6BFE">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-22C55E">
+</p>
+
+<p align="center">
+  <a href="docs/guia.pdf"><strong>📄 Guía en PDF</strong></a> ·
+  <a href="#demo"><strong>🎬 Ver demo</strong></a> ·
+  <a href="docs/instalacion.md"><strong>⚙️ Instalación</strong></a>
+</p>
 
 > **Sin claves en el repositorio.** La API key vive en `DEEPSEEK_API_KEY` o en `~/.emacs.d/.deepseek-key`; el token de GitHub, en `~/.authinfo`.
+
+## Demo
+
+![Demostración: código con un bug, pytest y el agente de proyecto](docs/assets/demo.gif)
 
 ## Qué incluye
 
 - **`emacs/init.el`** — configuración autocontenida (gptel + DeepSeek, LSP/Pyright, pytest, black, Magit, Forge, diff-hl, git-link).
 - **`docs/guia.md`** — guía completa, desde cero, con ejercicios.
+- **`docs/guia.pdf`** — la misma guía en PDF, con índice y resaltado.
+- **`docs/assets/`** — hero SVG/PNG y GIF de demostración.
 - **`docs/instalacion.md`** — instalación paso a paso.
 - **`practice/`** — proyecto de práctica (calculadora con tests en rojo).
 - **`scripts/`** — instalación, token de Forge, reset y verificación.
@@ -17,6 +39,7 @@ Guía práctica y configuración mínima de Emacs para programar Python con Deep
 - Emacs 29 o superior (probado con 31).
 - `git`, `python3`, `pytest`, `black`, `ripgrep`.
 - Opcional: `gh` (GitHub CLI) para Forge y pull requests.
+- Opcional: `pandoc` + `xelatex` para regenerar el PDF.
 
 ## Inicio rápido
 

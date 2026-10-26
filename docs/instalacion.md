@@ -133,7 +133,23 @@ Comprueba:
 - que Emacs carga la config y define el backend y las herramientas;
 - que el proyecto de práctica sigue en rojo (4 fallos).
 
-## 9. Repetir la guía
+## 9. Generar el PDF (opcional)
+
+El PDF ya está incluido en `docs/guia.pdf`. Para regenerarlo necesitas **pandoc** y **xelatex**:
+
+```bash
+./scripts/build-pdf.sh
+```
+
+Si no tienes pandoc instalado, descarga el binario estático y pásalo con `PANDOC`:
+
+```bash
+PANDOC=/ruta/a/pandoc ./scripts/build-pdf.sh
+```
+
+El script quita el título y el índice manual del Markdown (pandoc genera la portada y el índice) y produce un A4 con resaltado de código.
+
+## 10. Repetir la guía
 
 ```bash
 ./scripts/reset-practice.sh

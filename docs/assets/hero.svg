@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Emacs + DeepSeek para programación asistida en Python</title>
+  <desc id="desc">Banner con el título, atajos de teclado y un diff de ejemplo.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="0.55" stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4D6BFE"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.2" cy="0.3" r="0.6">
+      <stop offset="0" stop-color="#4D6BFE" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#4D6BFE" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E293B" stroke-width="1" opacity="0.55"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <style>
+      .sans { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; }
+      .mono { font-family: "JetBrainsMono Nerd Font Mono", "JetBrains Mono", "DejaVu Sans Mono", monospace; }
+      .title { font-size: 50px; font-weight: 700; fill: #F8FAFC; letter-spacing: -1px; }
+      .subtitle { font-size: 27px; fill: #CBD5E1; }
+      .muted { font-size: 18px; fill: #94A3B8; }
+      .tiny { font-size: 15px; fill: #64748B; }
+      .badge { font-size: 13px; font-weight: 700; fill: #DBEAFE; letter-spacing: 2px; }
+      .code { font-size: 18px; fill: #E2E8F0; }
+      .dim { fill: #94A3B8; }
+      .green { fill: #34D399; }
+      .red { fill: #F87171; }
+      .blue { fill: #93C5FD; }
+      .purple { fill: #C4B5FD; }
+      .keycap { font-size: 16px; font-weight: 700; fill: #E2E8F0; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+
+  <!-- Barra superior -->
+  <circle cx="64" cy="52" r="7" fill="#F87171"/>
+  <circle cx="88" cy="52" r="7" fill="#FBBF24"/>
+  <circle cx="112" cy="52" r="7" fill="#34D399"/>
+  <text x="140" y="58" class="mono tiny">~/src/emacs-deepseek-assistance-tools</text>
+
+  <!-- Columna izquierda -->
+  <rect x="64" y="120" width="286" height="30" rx="15" fill="#1E293B" stroke="#334155"/>
+  <text x="84" y="140" class="sans badge">GUÍA + CONFIGURACIÓN</text>
+
+  <text x="64" y="230" class="sans title">Emacs + DeepSeek</text>
+  <text x="64" y="276" class="sans subtitle">Programación asistida en Python</text>
+
+  <text x="64" y="330" class="sans muted">Chat · tests · refactor con diff · agente de proyecto</text>
+  <text x="64" y="358" class="sans muted">Magit · Forge · ejercicios reproducibles</text>
+
+  <rect x="64" y="392" width="120" height="4" rx="2" fill="url(#accent)"/>
+
+  <!-- Keycaps -->
+  <g filter="url(#shadow)">
+    <rect x="64" y="430" width="132" height="46" rx="10" fill="#111827" stroke="#334155"/>
+    <text x="84" y="459" class="mono keycap">C-c P t</text>
+
+    <rect x="210" y="430" width="132" height="46" rx="10" fill="#111827" stroke="#334155"/>
+    <text x="230" y="459" class="mono keycap">C-c I p</text>
+
+    <rect x="356" y="430" width="132" height="46" rx="10" fill="#111827" stroke="#334155"/>
+    <text x="376" y="459" class="mono keycap">C-c G c</text>
+  </g>
+
+  <text x="64" y="516" class="sans tiny">pytest → implementar → black → pytest → commit</text>
+
+  <!-- Columna derecha: tarjeta de terminal -->
+  <g filter="url(#shadow)">
+    <rect x="620" y="104" width="596" height="400" rx="18" fill="#0F172A" stroke="#1E293B"/>
+    <path d="M 620 148 H 1216" stroke="#1E293B" stroke-width="1"/>
+    <circle cx="650" cy="126" r="6" fill="#F87171"/>
+    <circle cx="672" cy="126" r="6" fill="#FBBF24"/>
+    <circle cx="694" cy="126" r="6" fill="#34D399"/>
+    <text x="1040" y="131" class="mono tiny">zsh — pytest</text>
+
+    <text x="650" y="186" class="mono code"><tspan class="dim">$</tspan> python3 -m pytest -q</text>
+    <text x="650" y="218" class="mono code"><tspan class="red">4 failed</tspan><tspan class="dim">,</tspan> <tspan class="green">4 passed</tspan></text>
+
+    <text x="650" y="270" class="mono code"><tspan class="dim">$</tspan> <tspan class="blue">C-c I p</tspan>  <tspan class="dim"># agente de proyecto</tspan></text>
+    <text x="650" y="302" class="mono code"><tspan class="purple">proyecto_leer</tspan> <tspan class="dim">→</tspan> calc/operaciones.py</text>
+
+    <text x="650" y="354" class="mono code"><tspan class="dim">-</tspan>     <tspan class="red">return a + b</tspan></text>
+    <text x="650" y="386" class="mono code"><tspan class="dim">+</tspan>     <tspan class="green">return a * b</tspan></text>
+
+    <rect x="650" y="424" width="536" height="52" rx="10" fill="#111827" stroke="#1E293B"/>
+    <text x="670" y="456" class="mono code"><tspan class="green">✓</tspan> 8 passed  <tspan class="dim">·</tspan>  <tspan class="blue">C-c G c</tspan>  <tspan class="dim">commit</tspan></text>
+  </g>
+
+  <!-- Pie -->
+  <text x="64" y="596" class="mono tiny">github.com/lmedinar/emacs-deepseek-assistance-tools</text>
+  <text x="1216" y="596" class="sans tiny" text-anchor="end">MIT · sin claves en el repo</text>
+</svg>
