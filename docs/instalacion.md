@@ -4,21 +4,73 @@ Esta configuración está pensada para probarse **sin tocar tu configuración pe
 
 ## 1. Requisitos
 
-| Herramienta | Para qué | Comprobar |
-|---|---|---|
-| Emacs 29+ | Editor | `emacs --version` |
-| Python 3.10+ | Proyecto y tests | `python3 --version` |
-| pytest | Tests | `python3 -m pytest --version` |
-| black | Formato | `black --version` |
-| ripgrep | Búsqueda del agente | `rg --version` |
-| git | Control de versiones | `git --version` |
-| gh (opcional) | Forge y PRs | `gh --version` |
+| Herramienta | Qué es | Para qué | Comprobar |
+|---|---|---|---|
+| **Emacs 29+** | Editor | gptel, Magit, LSP y la guía | `emacs --version` |
+| **Python 3.10+** | Intérprete | Proyecto y tests | `python3 --version` (Windows: `py --version`) |
+| **pytest** | Ejecutor de tests | Ciclo rojo → verde | `python3 -m pytest --version` |
+| **black** | Formateador automático | Estilo único; no busca bugs | `black --version` |
+| **Pyright** | Servidor de lenguaje (LSP) | Autocompletado, diagnósticos, ir a definición | `pyright --version` |
+| **ripgrep (`rg`)** | Buscador rápido | Lo usa el agente | `rg --version` |
+| **git** | Control de versiones | Magit, commits, ramas | `git --version` |
+| **gh** (opcional) | GitHub CLI | Forge, PRs y CI | `gh --version` |
+| **pandoc + xelatex** (opcional) | Markdown → PDF | Regenerar la guía | `pandoc --version` |
 
-En Debian/Ubuntu:
+**Qué instala cada cosa:**
+
+- `emacs/init.el` instala los **paquetes de Emacs** desde MELPA (`gptel`, `lsp-mode`, `lsp-pyright`, `magit`, `forge`, etc.).
+- `scripts/install-deps.sh --yes` (Linux/macOS) o `scripts/setup.ps1 -Install` (Windows) instalan las **herramientas del sistema**, `pytest`, `black` y `pyright`.
+- `scripts/setup.sh` / `scripts/setup.ps1` **solo comprueban** y crean el proyecto de práctica; no instalan por defecto.
+
+> **black vs LSP:** `black` reescribe el código (formato). **Pyright** es el servidor de lenguaje: diagnostics, autocompletado, navegación. No se sustituyen.
+
+### Linux (Debian/Ubuntu)
 
 ```bash
-sudo apt install emacs git ripgrep python3 python3-pip
+sudo apt update
+sudo apt install emacs git ripgrep python3 python3-pip gh nodejs npm
 python3 -m pip install --user pytest black
+npm install -g pyright
+```
+
+### Arch Linux
+
+```bash
+sudo pacman -S --needed emacs git ripgrep python python-pip nodejs npm github-cli
+python -m pip install --user pytest black
+npm install -g pyright
+```
+
+### macOS (Homebrew)
+
+```bash
+brew install emacs git ripgrep python gh node
+python3 -m pip install --user pytest black
+npm install -g pyright
+```
+
+### Windows (PowerShell)
+
+```powershell
+winget install -e --id GNU.Emacs
+winget install -e --id Git.Git
+winget install -e --id BurntSushi.ripgrep.MSVC
+winget install -e --id Python.Python.3.12
+winget install -e --id GitHub.cli
+winget install -e --id OpenJS.NodeJS.LTS
+py -m pip install --user pytest black
+npm install -g pyright
+```
+
+> En Windows usa `py` o `python`; la config detecta el ejecutable. Los scripts `.sh` requieren Git Bash/WSL; los `.ps1` están incluidos.
+
+O deja que el repo lo haga por ti:
+
+```bash
+./scripts/install-deps.sh --yes   # Linux/macOS
+```
+```powershell
+.\scripts\setup.ps1 -Install      # Windows
 ```
 
 ## 2. Clonar el repositorio
@@ -52,6 +104,13 @@ La configuración lee primero `DEEPSEEK_API_KEY` y, si no existe, el archivo.
 
 > **Aviso:** Nunca pongas la clave en `init.el`, en el README ni en un commit.
 
+**Windows (PowerShell):**
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.emacs.d" | Out-Null
+Set-Content -Path "$HOME\.emacs.d\.deepseek-key" -Value 'tu-clave' -NoNewline
+```
+
 ## 4. GitHub y Forge (opcional)
 
 Forge permite ver issues y pull requests dentro de Magit.
@@ -59,6 +118,13 @@ Forge permite ver issues y pull requests dentro de Magit.
 ```bash
 gh auth login
 ./scripts/setup-forge.sh
+```
+
+**Windows:**
+
+```powershell
+gh auth login
+.\scripts\setup-forge.ps1
 ```
 
 El script crea `~/.authinfo` con permisos `600` y dos entradas:
@@ -78,6 +144,12 @@ También configura `github.user` en Git, que `ghub` necesita para saber el usuar
 ./scripts/setup.sh
 ```
 
+**Windows:**
+
+```powershell
+.\scripts\setup.ps1
+```
+
 El script:
 
 1. Comprueba las herramientas.
@@ -92,6 +164,12 @@ Al usar el agente (`C-c I p`), se crea `<proyecto>/.emacs-deepseek/` con `contex
 
 ```bash
 emacs --init-directory "$PWD/emacs"
+```
+
+**Windows (PowerShell):**
+
+```powershell
+emacs --init-directory "$PWD\emacs"
 ```
 
 La primera vez, `use-package` descargará gptel, Magit, Forge, LSP, etc. Puede tardar unos minutos.
@@ -129,6 +207,12 @@ emacs -Q -l "$PWD/emacs/init.el"
 ./scripts/check.sh
 ```
 
+**Windows:**
+
+```powershell
+.\scripts\check.ps1
+```
+
 Comprueba:
 
 - sintaxis de los scripts;
@@ -155,6 +239,12 @@ El script quita el título y el índice manual del Markdown (pandoc genera la po
 
 ```bash
 ./scripts/reset-practice.sh
+```
+
+**Windows:**
+
+```powershell
+.\scripts\reset-practice.ps1
 ```
 
 Vuelve a `estado-inicial`:

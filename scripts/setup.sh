@@ -5,14 +5,35 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PRACTICE="${PRACTICE_DIR:-$HOME/src/ia-python-practica}"
 
+INSTALL=0
+for arg in "$@"; do
+  case "$arg" in
+    --install) INSTALL=1 ;;
+    -h|--help)
+      echo "Uso: $0 [--install]"
+      echo "  --install  Instala las dependencias con scripts/install-deps.sh --yes."
+      exit 0 ;;
+    *) echo "Argumento desconocido: $arg" >&2; exit 1 ;;
+  esac
+done
+
+if [ "$INSTALL" -eq 1 ]; then
+  "$ROOT/scripts/install-deps.sh" --yes
+fi
+
 echo "== Herramientas =="
-for cmd in git python3 pytest black rg; do
+FALTAN=0
+for cmd in git python3 pytest black rg pyright; do
   if command -v "$cmd" >/dev/null 2>&1; then
     echo "  ok: $cmd"
   else
     echo "  FALTA: $cmd"
+    FALTAN=1
   fi
 done
+if [ "$FALTAN" -eq 1 ] && [ "$INSTALL" -eq 0 ]; then
+  echo "  Instala lo que falta con: ./scripts/install-deps.sh --yes"
+fi
 
 echo
 echo "== Clave de DeepSeek =="

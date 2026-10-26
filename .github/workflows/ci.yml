@@ -16,3 +16,19 @@ jobs:
         run: python -m compileall -q practice
       - name: Sintaxis de scripts
         run: bash -n scripts/*.sh practice/scripts/*.sh
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Sintaxis PowerShell
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path 'scripts/*.ps1','practice/scripts/*.ps1' | ForEach-Object {
+            [scriptblock]::Create((Get-Content $_.FullName -Raw)) | Out-Null
+          }
+      - name: Sintaxis de Python
+        run: python -m compileall -q practice

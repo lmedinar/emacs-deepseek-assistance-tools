@@ -48,10 +48,6 @@
       :key (mi-clave-deepseek)
       :stream t))
 
-  (defvar mi-gemini-backend
-    (when-let ((key (getenv "GEMINI_API_KEY")))
-      (gptel-make-gemini "Gemini" :key key :stream t)))
-
   (setq gptel-backend mi-deepseek-backend)
   (setq gptel-model 'deepseek-flash)
 
@@ -84,13 +80,6 @@ Requisitos en comentarios:
     (interactive)
     (gptel-cambiar-entorno mi-deepseek-backend 'deepseek-v4-pro "*gptel-deepseek-pro*"))
 
-  (defun gptel-usar-gemini ()
-    "Gemini 2.5 Flash (opcional; define GEMINI_API_KEY)."
-    (interactive)
-    (if mi-gemini-backend
-        (gptel-cambiar-entorno mi-gemini-backend 'gemini-2.5-flash "*gptel-gemini*")
-      (user-error "Define GEMINI_API_KEY para usar Gemini")))
-
   (unless (mi-clave-deepseek)
     (display-warning 'gptel "Configura DEEPSEEK_API_KEY o ~/.emacs.d/.deepseek-key")))
 
@@ -105,10 +94,24 @@ Requisitos en comentarios:
 
 (use-package lsp-pyright
   :ensure t
-  :hook (python-mode . (lambda () (require 'lsp-pyright))))
+  :hook (python-mode . (lambda () (require 'lsp-pyright)))
+  :init (let ((py (or (executable-find "python3")
+                      (executable-find "python"))))
+          (when py
+            (setq lsp-pyright-python-executable-cmd py))))
 
 (use-package blacken
-  :ensure t)
+  :ensure t
+  :config
+  (when-let ((black (executable-find "black")))
+    (setq blacken-executable black)))
+
+;; Ejecutable de Python para el REPL y los comandos del agente.
+(setq python-shell-interpreter
+      (or (executable-find "python3")
+          (executable-find "python")
+          (executable-find "py")
+          "python3"))
 
 ;; --- Comandos de IA y Python (se añaden a continuación) ---
 
@@ -238,6 +241,13 @@ Requisitos en comentarios:
   (gptel "*IA: chat*"))
 
 ;; --- Comandos de Python ---
+(defun py--ejecutable ()
+  "Devuelve el ejecutable de Python disponible."
+  (or (executable-find "python3")
+      (executable-find "python")
+      (executable-find "py")
+      "python3"))
+
 (defun py--raiz ()
   "Raíz del proyecto Python (o el directorio actual)."
   (or (locate-dominating-file default-directory "pyproject.toml")
@@ -251,13 +261,15 @@ Requisitos en comentarios:
   (interactive)
   (unless (buffer-file-name)
     (user-error "Guarda el archivo antes de ejecutarlo"))
-  (compile (format "python3 %s" (shell-quote-argument (buffer-file-name)))))
+  (compile (format "%s %s"
+                   (py--ejecutable)
+                   (shell-quote-argument (buffer-file-name)))))
 
 (defun py-pytest ()
   "Ejecuta pytest desde la raíz del proyecto."
   (interactive)
   (let ((default-directory (py--raiz)))
-    (compile "python3 -m pytest -q")))
+    (compile (format "%s -m pytest -q" (py--ejecutable)))))
 
 (defun py-black ()
   "Formatea el buffer con black."
@@ -295,7 +307,6 @@ Requisitos en comentarios:
 (define-key mi-ia-map (kbd "s") #'gptel-send)
 (define-key mi-ia-map (kbd "1") #'gptel-usar-deepseek)
 (define-key mi-ia-map (kbd "2") #'gptel-usar-deepseek-pro)
-(define-key mi-ia-map (kbd "3") #'gptel-usar-gemini)
 (global-set-key (kbd "C-c I") mi-ia-map)
 
 (defvar mi-python-map (make-sparse-keymap) "Atajos de Python.")
@@ -402,7 +413,7 @@ Requisitos en comentarios:
       (insert "## Archivos\n\n")
       (insert arbol "\n\n")
       (insert "## Comandos\n\n")
-      (insert "- Tests: `python3 -m pytest -q`\n")
+      (insert (format "- Tests: `%s -m pytest -q`\n" (py--ejecutable)))
       (insert "- Formato: `black .`\n\n")
       (insert "## Convenciones\n\n")
       (insert "- Añade aquí reglas del proyecto. Este archivo se ignora en Git.\n"))))
@@ -659,7 +670,7 @@ Señala error si se sale de la raíz.  Si NO-EXIGIR es nil, exige que exista."
          (args (append (list "-m" "pytest" "-q")
                        (when (and ruta (not (string-empty-p ruta)))
                          (list ruta)))))
-    (ia--resultado (ia--ejecutar "python3" args raiz 180))))
+    (ia--resultado (ia--ejecutar (py--ejecutable) args raiz 180))))
 
 (defun ia--git (accion &optional commit)
   (let* ((raiz (ia--raiz-proyecto))

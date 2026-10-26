@@ -87,7 +87,95 @@ Este es el corazón de la guía. Se repite hasta que el programa está terminado
 
 ## 3. Preparación
 
-### 3.1 Verificar DeepSeek
+Esta guía funciona en Linux, macOS y Windows. Los comandos de Emacs son iguales en los tres; los de terminal cambian.
+
+### 3.1 Qué es cada herramienta y por qué
+
+| Herramienta | Qué es | Para qué sirve |
+|---|---|---|
+| **Emacs** | Editor | gptel, Magit, LSP y todos los atajos |
+| **Python 3** | Intérprete | Ejecutar el proyecto y los tests |
+| **pytest** | Ejecutor de tests | El ciclo rojo → verde |
+| **black** | Formateador automático | Reescribe el código a un estilo único; evita discusiones de estilo. **No busca bugs.** |
+| **Pyright** | Servidor de lenguaje (**LSP**) | Autocompletado, diagnósticos, ir a definición, documentación al pasar el cursor y renombrar. **No formatea.** |
+| **ripgrep (`rg`)** | Buscador de texto rápido | Lo usa el agente (`proyecto_buscar`) para explorar el proyecto |
+| **git / gh** | Control de versiones / GitHub CLI | Magit, Forge, PRs y CI |
+| **gptel** | Cliente de IA para Emacs | Se instala solo con `emacs/init.el` desde MELPA |
+| **pandoc + xelatex** | Conversión Markdown → PDF | Solo para regenerar `docs/guia.pdf`; el PDF ya está incluido |
+
+> **Aviso:** **LSP** significa *Language Server Protocol*: un protocolo estándar entre el editor y un servidor de lenguaje. Emacs (`lsp-mode`) habla con **Pyright**, que es el servidor de Python. **black** formatea; **Pyright** diagnostica. No son lo mismo y no se sustituyen.
+
+**Qué se instala solo y qué no:**
+
+- `emacs/init.el` instala los **paquetes de Emacs** (`gptel`, `lsp-mode`, `lsp-pyright`, `magit`, `forge`, etc.) desde MELPA.
+- `pytest`, `black`, `pyright`, `rg`, `git`, `gh` y Python son **herramientas del sistema** y se instalan aparte.
+- `scripts/setup.sh` **solo comprueba**; no instala. Para instalar: `./scripts/install-deps.sh --yes` (Linux/macOS) o `.\scripts\setup.ps1 -Install` (Windows).
+
+### 3.2 Instalar en Linux y macOS
+
+**Debian/Ubuntu:**
+
+```bash
+sudo apt update
+sudo apt install emacs git ripgrep python3 python3-pip gh nodejs npm
+python3 -m pip install --user pytest black
+npm install -g pyright
+```
+
+**Arch Linux:**
+
+```bash
+sudo pacman -S --needed emacs git ripgrep python python-pip nodejs npm github-cli
+python -m pip install --user pytest black
+npm install -g pyright
+```
+
+**macOS (Homebrew):**
+
+```bash
+brew install emacs git ripgrep python gh node
+python3 -m pip install --user pytest black
+npm install -g pyright
+```
+
+O deja que el repo lo haga:
+
+```bash
+./scripts/install-deps.sh --yes
+```
+
+`pip --user` instala `pytest` y `black` en tu usuario; `npm -g` instala el binario de Pyright. El paquete de Emacs `lsp-pyright` se instala solo con `init.el`, pero **el binario de Pyright es aparte**.
+
+### 3.3 Instalar en Windows
+
+Abre **PowerShell**:
+
+```powershell
+winget install -e --id GNU.Emacs
+winget install -e --id Git.Git
+winget install -e --id BurntSushi.ripgrep.MSVC
+winget install -e --id Python.Python.3.12
+winget install -e --id GitHub.cli
+winget install -e --id OpenJS.NodeJS.LTS
+py -m pip install --user pytest black
+npm install -g pyright
+```
+
+O:
+
+```powershell
+.\scripts\setup.ps1 -Install
+```
+
+Notas de Windows:
+
+- Usa `py` o `python`; `python3` puede no existir. La configuración detecta el ejecutable.
+- Los scripts `.sh` necesitan **Git Bash** o **WSL**; usa los `.ps1`.
+- `emacs --init-directory "$PWD\emacs"`.
+- `~/.emacs.d` en Emacs puede ser `C:\Users\<usuario>\AppData\Roaming\.emacs.d` o `C:\Users\<usuario>\.emacs.d`. Compruébalo con `C-h v user-emacs-directory`.
+- Si `black` o `pyright` no aparecen, cierra y abre PowerShell para refrescar el `PATH`.
+
+### 3.4 Verificar DeepSeek
 
 Abre Emacs y ejecuta:
 
@@ -97,33 +185,48 @@ M-x gptel-menu
 
 En el menú debe aparecer **DeepSeek** y el modelo **deepseek-flash**. También puedes cambiar directo:
 
-| Atajo | Backend |
-|---|---|
+| Atajo     | Backend                              |
+| --------- | ------------------------------------ |
 | `C-c I 1` | DeepSeek Flash (rápido, por defecto) |
-| `C-c I 2` | DeepSeek V4 Pro (más potente) |
-| `C-c I 3` | Gemini 2.5 Flash |
+| `C-c I 2` | DeepSeek V4 Pro (más potente)        |
 
-Si dice que falta la clave, revisa que exista `~/.emacs.d/.deepseek-key` con permisos `600`.
+Si dice que falta la clave, revisa que exista `~/.emacs.d/.deepseek-key` con permisos `600`. En Windows, créala en la carpeta que muestre `user-emacs-directory`.
 
-### 3.2 Verificar Python
+### 3.5 Verificar Python, black y LSP
 
-En una terminal:
+**Linux/macOS:**
 
 ```bash
-python3 -m pytest --version   # debe decir pytest 9.x
-black --version               # debe existir
-pyright --version             # LSP de Python
+python3 -m pytest --version   # pytest 9.x
+black --version               # formateador
+pyright --version             # servidor LSP
 ```
 
-Los tres ya están instalados en tu máquina.
+**Windows:**
 
-### 3.3 Abrir el proyecto de práctica
+```powershell
+py -m pytest --version
+black --version
+pyright --version
+```
+
+Si falta algo:
+
+- `pytest` o `black` → `python3 -m pip install --user pytest black` (Windows: `py -m pip ...`).
+- `pyright` → `npm install -g pyright`.
+- `rg` → instálalo con `apt`, `brew` o `winget`.
+
+LSP no se “ejecuta” a mano: al abrir un `.py`, Emacs arranca `lsp-mode` + Pyright. La primera vez tarda unos segundos; verás `LSP` en la barra inferior. `C-c P l` abre la lista de diagnósticos. Si algo falla: `M-x lsp-workspace-restart`.
+
+### 3.6 Abrir el proyecto de práctica
 
 ```
 C-x C-f ~/src/ia-python-practica/calc/operaciones.py RET
 ```
 
-Cuando abras un archivo `.py`, Emacs arranca **LSP + Pyright** automáticamente. La primera vez tarda unos segundos; verás el aviso `LSP` en la barra inferior. Espera a que termine antes de pedir diagnósticos.
+En Windows, abre la ruta equivalente (`C:\Users\<usuario>\src\ia-python-practica\...`) o usa `C-x C-f` y navega.
+
+Cuando abras un archivo `.py`, Emacs arranca **LSP + Pyright** automáticamente. Espera a que termine antes de pedir diagnósticos.
 
 ---
 
@@ -148,7 +251,6 @@ Todos abren (o reutilizan) un buffer llamado `*IA: acción*`. La respuesta se es
 | `C-c I s` | `gptel-send` | Envía el mensaje en un buffer de chat | Seguir la conversación |
 | `C-c I 1` | `gptel-usar-deepseek` | Cambia a DeepSeek Flash | Rápido y barato |
 | `C-c I 2` | `gptel-usar-deepseek-pro` | Cambia a DeepSeek V4 Pro | Tareas complejas |
-| `C-c I 3` | `gptel-usar-gemini` | Cambia a Gemini 2.5 Flash | Alternativa |
 
 ### 4.1 Explicar (`C-c I e`)
 
@@ -195,13 +297,13 @@ Para volver a enviar en cualquiera de los buffers `*IA: ...*`: `C-c RET`.
 
 ## 5. Comandos de Python (`C-c P`)
 
-| Atajo | Comando | Qué hace |
-|---|---|---|
-| `C-c P r` | `py-ejecutar` | Ejecuta el archivo actual con `python3` |
-| `C-c P t` | `py-pytest` | Ejecuta `python3 -m pytest -q` desde la raíz del proyecto |
-| `C-c P f` | `py-black` | Formatea el buffer con `black` |
-| `C-c P l` | `py-lint` | Abre la lista de errores de Pyright/flycheck |
-| `C-c P c` | `py-repl` | Abre un REPL de Python |
+| Atajo     | Comando       | Qué hace                                                  |
+| --------- | ------------- | --------------------------------------------------------- |
+| `C-c P r` | `py-ejecutar` | Ejecuta el archivo actual con `python3`                   |
+| `C-c P t` | `py-pytest`   | Ejecuta `python3 -m pytest -q` desde la raíz del proyecto |
+| `C-c P f` | `py-black`    | Formatea el buffer con `black`                            |
+| `C-c P l` | `py-lint`     | Abre la lista de errores de Pyright/flycheck              |
+| `C-c P c` | `py-repl`     | Abre un REPL de Python                                    |
 
 ### 5.1 Ejecutar (`C-c P r`)
 
@@ -914,7 +1016,7 @@ Si algo sale mal, `C-/` deshace en el buffer y Git te permite volver atrás (sec
 │ e explicar   t tests      i implementar   r revisar    │
 │ f refactor   d docstrings x corregir      c chat       │
 │ p agente     a aceptar    K rechazar      D diff       │
-│ m menú       1 DeepSeek   2 V4 Pro        3 Gemini     │
+│ m menú       1 DeepSeek   2 V4 Pro                     │
 │ n nueva sesión   s enviar                              │
 ├─ PYTHON (C-c P) ───────────────────────────────────────┤
 │ r ejecutar   t pytest     f black         l lint       │
@@ -1003,6 +1105,24 @@ Mantén estable el prefijo: no edites mensajes anteriores, no cambies `contexto.
 
 **Quiero borrar la sesión del proyecto.**
 `C-c I n` archiva la actual y crea una nueva. Para borrar todo, elimina la carpeta `<proyecto>/.emacs-deepseek/` (está ignorada por Git).
+
+**`python3` no existe (Windows).**
+Usa `py` o `python`. La configuración detecta el ejecutable (`py--ejecutable`), así que `C-c P t` funciona igual. En la terminal: `py -m pytest`.
+
+**`black` o `pytest` no aparecen.**
+Instálalos con `python3 -m pip install --user pytest black` (Windows: `py -m pip ...`) y abre una terminal nueva. Si `black` sigue sin aparecer, revisa `blacken-executable` con `C-h v`.
+
+**Pyright/LSP no arranca.**
+Instala el binario: `npm install -g pyright` (o `pipx install pyright`). Luego `M-x lsp-workspace-restart`. En Windows, si no encuentra el servidor, revisa `lsp-pyright-langserver-command` (`pyright-langserver.cmd`).
+
+**`setup.sh` no instala nada.**
+Es intencional: solo comprueba. Usa `./scripts/install-deps.sh --yes` (Linux/macOS) o `.\scripts\setup.ps1 -Install` (Windows).
+
+**En Windows los `.sh` no funcionan.**
+Usa los `.ps1` equivalentes o Git Bash/WSL.
+
+**No sé dónde está mi `~/.emacs.d` en Windows.**
+`C-h v user-emacs-directory RET` te muestra la ruta real. Crea allí `.deepseek-key`.
 
 ---
 

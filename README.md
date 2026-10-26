@@ -64,14 +64,74 @@ La segunda llamada reutilizó 1664 tokens del prefijo. El contexto local no es l
 - **Contexto por proyecto** — `.emacs-deepseek/` (ignorado por Git) mantiene contexto y sesión; DeepSeek cachea el prefijo y abarata las llamadas.
 - **`docs/instalacion.md`** — instalación paso a paso.
 - **`practice/`** — proyecto de práctica (calculadora con tests en rojo).
-- **`scripts/`** — instalación, token de Forge, reset y verificación.
+- **`scripts/`** — instalación, token de Forge, reset y verificación, con equivalentes `.sh` y `.ps1` para Windows.
 
 ## Requisitos
 
-- Emacs 29 o superior (probado con 31).
-- `git`, `python3`, `pytest`, `black`, `ripgrep`.
-- Opcional: `gh` (GitHub CLI) para Forge y pull requests.
-- Opcional: `pandoc` + `xelatex` para regenerar el PDF.
+| Herramienta | Qué es | Para qué |
+|---|---|---|
+| **Emacs 29+** | Editor | gptel, Magit, LSP y toda la guía |
+| **Git** | Control de versiones | Magit, commits, ramas |
+| **Python 3.10+** | Intérprete | Proyecto y tests |
+| **pytest** | Ejecutor de tests | Ciclo rojo → verde |
+| **black** | Formateador automático | Reescribe el código a un estilo único; no busca bugs |
+| **ripgrep (`rg`)** | Buscador rápido | Lo usa el agente para explorar archivos |
+| **Pyright** | Servidor de lenguaje (LSP) | Autocompletado, diagnósticos, ir a definición |
+| **gh** (opcional) | GitHub CLI | Forge, PRs y CI |
+| **pandoc + xelatex** (opcional) | Markdown → PDF | Regenerar `docs/guia.pdf` |
+
+**Qué instala cada cosa:**
+
+- `emacs/init.el` instala **paquetes de Emacs** desde MELPA (`gptel`, `lsp-mode`, `lsp-pyright`, `magit`, `forge`, etc.).
+- **`scripts/install-deps.sh --yes`** (Linux/macOS) o **`scripts/setup.ps1 -Install`** (Windows) instalan las **herramientas del sistema**, `pytest`, `black` y `pyright`.
+- **`scripts/setup.sh`** / **`setup.ps1`** solo **comprueban** y crean el proyecto de práctica. **No instalan nada por defecto.**
+
+## Instalación por SO
+
+**Debian/Ubuntu**
+
+```bash
+sudo apt update
+sudo apt install emacs git ripgrep python3 python3-pip gh nodejs npm
+python3 -m pip install --user pytest black
+npm install -g pyright
+```
+
+**Arch Linux**
+
+```bash
+sudo pacman -S --needed emacs git ripgrep python python-pip nodejs npm github-cli
+python -m pip install --user pytest black
+npm install -g pyright
+```
+
+**macOS (Homebrew)**
+
+```bash
+brew install emacs git ripgrep python gh node
+python3 -m pip install --user pytest black
+npm install -g pyright
+```
+
+**Windows (PowerShell)**
+
+```powershell
+winget install -e --id GNU.Emacs
+winget install -e --id Git.Git
+winget install -e --id BurntSushi.ripgrep.MSVC
+winget install -e --id Python.Python.3.12
+winget install -e --id GitHub.cli
+winget install -e --id OpenJS.NodeJS.LTS
+py -m pip install --user pytest black
+npm install -g pyright
+```
+
+O deja que el repo lo haga por ti:
+
+- Linux/macOS: `./scripts/install-deps.sh --yes`
+- Windows: `.\scripts\setup.ps1 -Install`
+
+> En Windows usa `py` o `python`; la configuración detecta el ejecutable. Los scripts `.sh` requieren Git Bash/WSL; los equivalentes `.ps1` están incluidos.
 
 ## Inicio rápido
 
@@ -91,6 +151,25 @@ chmod 600 ~/.emacs.d/.deepseek-key
 
 # 3. Emacs con esta configuración
 emacs --init-directory "$PWD/emacs"
+```
+
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/lmedinar/emacs-deepseek-assistance-tools.git
+cd emacs-deepseek-assistance-tools
+
+# 1. Clave de DeepSeek
+$env:DEEPSEEK_API_KEY = 'tu-clave'
+# o:
+New-Item -ItemType Directory -Force "$HOME\.emacs.d" | Out-Null
+Set-Content -Path "$HOME\.emacs.d\.deepseek-key" -Value 'tu-clave' -NoNewline
+
+# 2. Proyecto de práctica
+.\scripts\setup.ps1
+
+# 3. Emacs
+emacs --init-directory "$PWD\emacs"
 ```
 
 Dentro de Emacs:
