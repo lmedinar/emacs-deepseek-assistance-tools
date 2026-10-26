@@ -14,6 +14,7 @@
 
 <p align="center">
   <a href="docs/guia.pdf"><strong>📄 Guía en PDF</strong></a> ·
+  <a href="https://github.com/lmedinar/emacs-deepseek-assistance-tools/raw/main/docs/guia.pdf"><strong>⬇️ PDF directo</strong></a> ·
   <a href="#demo"><strong>🎬 Ver demo</strong></a> ·
   <a href="docs/instalacion.md"><strong>⚙️ Instalación</strong></a>
 </p>

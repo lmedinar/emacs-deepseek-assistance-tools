@@ -69,4 +69,10 @@ PY
   -V titlepage \
   -V papersize=a4
 
+# "Fast web view": facilita la carga por páginas en visores web (GitHub, navegadores).
+if command -v qpdf >/dev/null 2>&1; then
+  qpdf --linearize "$ROOT/docs/guia.pdf" "$ROOT/docs/guia-linear.pdf"
+  mv "$ROOT/docs/guia-linear.pdf" "$ROOT/docs/guia.pdf"
+fi
+
 echo "Generado: $ROOT/docs/guia.pdf"
