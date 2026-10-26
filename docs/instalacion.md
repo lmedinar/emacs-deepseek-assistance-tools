@@ -86,6 +86,8 @@ El script:
 
 Si la carpeta ya existe, no la toca.
 
+Al usar el agente (`C-c I p`), se crea `<proyecto>/.emacs-deepseek/` con `contexto.md` y `proyecto.md`. Está ignorado por Git (`.emacs-deepseek/.gitignore` contiene `*`) y no guarda claves.
+
 ## 6. Abrir Emacs con esta configuración
 
 ```bash

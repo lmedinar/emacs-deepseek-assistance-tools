@@ -796,6 +796,62 @@ Cada paso es una petición normal en el chat. No escribes comandos: el modelo el
 - “Muéstrame `git diff` y propone un mensaje de commit.”
 - “Haz commit y push.”
 
+### 12.5 Contexto y caché por proyecto
+
+DeepSeek cachea prefijos en el servidor de forma automática: si dos peticiones comparten el mismo inicio (system prompt + contexto + historial), la segunda paga menos por esa parte. No hay que activar nada en la API.
+
+Para que esa caché acierte, el agente y **todas** las llamadas de gptel dentro de un proyecto usan un **contexto estable** guardado en:
+
+```
+<proyecto>/.emacs-deepseek/contexto.md
+```
+
+- Se crea solo la primera vez, con la raíz, el árbol de archivos y comandos básicos.
+- Puedes editarlo para añadir convenciones, arquitectura o decisiones.
+- Está **ignorado por Git** (`.emacs-deepseek/.gitignore` contiene `*`), así que no se sube nunca.
+- Se recarga automáticamente en cada llamada; si no existe, se regenera.
+
+La **sesión del agente** se guarda en:
+
+```
+<proyecto>/.emacs-deepseek/proyecto.md
+```
+
+- Es un chat Markdown persistente: conserva el historial entre turnos y entre reinicios de Emacs.
+- Se guarda automáticamente después de cada respuesta.
+- `C-c I n` archiva la sesión actual y empieza una nueva.
+- También está ignorada por Git.
+
+**Todas las llamadas** de gptel dentro de un proyecto reciben el contexto mediante un `advice` sobre `gptel-request`; si no hay proyecto (o el contexto no se puede leer), la llamada se hace normal, sin contexto.
+
+La cabecera del agente muestra el uso de tokens y la caché:
+
+```
+[443, C1.7k↑ 78↓]
+```
+
+- `443` = tokens de entrada no cacheados.
+- `C1.7k` = tokens que vinieron de la caché.
+- `78↓` = tokens de salida.
+
+En la prueba real de esta guía: primer turno `cached 0`; segundo turno `cached 1664`. Eso es la caché funcionando.
+
+**Para ahorrar más:**
+
+- Un chat por tarea; no mezcles temas.
+- Mantén `contexto.md` estable; si lo cambias, la caché se invalida.
+- `C-c I n` cuando empieces algo nuevo.
+- `gptel-max-tokens` para limitar la salida.
+- `gptel--num-messages-to-send` para limitar el historial enviado.
+- `deepseek-flash` para rutina; `deepseek-v4-pro` para lo complejo.
+
+Si quieres desactivarlo:
+
+```elisp
+(setq ia-proyecto-contexto nil)  ; no inyectar contexto
+(setq ia-proyecto-sesion nil)    ; agente sin sesión persistente
+```
+
 ### Ejercicios del agente
 
 #### P1 — Explorar (10 min)
@@ -835,7 +891,7 @@ Cada paso es una petición normal en el chat. No escribes comandos: el modelo el
 
 **Hecho cuando:** `gh repo view --web` muestra el commit.
 
-### 12.5 Seguridad
+### 12.6 Seguridad
 
 - La raíz se fija al abrir el agente; las rutas fuera del proyecto se rechazan.
 - Escrituras y borrados siempre con diff/confirmación.
@@ -859,7 +915,7 @@ Si algo sale mal, `C-/` deshace en el buffer y Git te permite volver atrás (sec
 │ f refactor   d docstrings x corregir      c chat       │
 │ p agente     a aceptar    K rechazar      D diff       │
 │ m menú       1 DeepSeek   2 V4 Pro        3 Gemini     │
-│ s enviar                                               │
+│ n nueva sesión   s enviar                              │
 ├─ PYTHON (C-c P) ───────────────────────────────────────┤
 │ r ejecutar   t pytest     f black         l lint       │
 │ c REPL                                                 │
@@ -936,6 +992,18 @@ Comprueba el remoto y el upstream con `C-c G s`. La primera vez, `git push -u or
 **Quiero deshacer lo que hizo el agente.**
 `C-/` en el buffer para la última edición; para todo lo demás, `git restore`, `git reset` o `./scripts/reset.sh` (sección 15).
 
+**No veo los tokens ni la caché.**
+La cabecera del agente muestra `[entrada, Ccache↑ salida↓]`. Comprueba que estás en `*IA: proyecto*` (o en el archivo de sesión) y que `gptel-use-header-line` es `t`. Reinicia Emacs si acabas de cambiar la config.
+
+**El contexto del proyecto no se actualiza.**
+Edita o borra `<proyecto>/.emacs-deepseek/contexto.md`; se regenera en la siguiente llamada. Si añades archivos nuevos, también puedes borrarlo para que se recree el árbol.
+
+**La caché no acierta.**
+Mantén estable el prefijo: no edites mensajes anteriores, no cambies `contexto.md` a mitad de una tarea y no mezcles temas. Si la sesión ya es muy larga o desordenada, `C-c I n` empieza una nueva.
+
+**Quiero borrar la sesión del proyecto.**
+`C-c I n` archiva la actual y crea una nueva. Para borrar todo, elimina la carpeta `<proyecto>/.emacs-deepseek/` (está ignorada por Git).
+
 ---
 
 ## Para ir más lejos
@@ -949,7 +1017,7 @@ Comprueba el remoto y el upstream con `C-c G s`. La primera vez, `git push -u or
 - **Agente de proyecto:** `C-c I p` combina exploración, edición con diff, pytest y Git en un solo chat.
 - **Configuración pública:** la guía y una config de Emacs sin claves están en `https://github.com/lmedinar/emacs-deepseek-assistance-tools`.
 
-> **Dato:** Configuración verificada: gptel 20261018.848, DeepSeek `deepseek-flash` (V4.1 Flash) y `deepseek-v4-pro`, Pyright, pytest 9.1.1, black, Magit, Forge, el agente de proyecto y `gh` autenticado con `gh`.
+> **Dato:** Configuración verificada: gptel 20261018.848, DeepSeek `deepseek-flash` (V4.1 Flash) y `deepseek-v4-pro`, Pyright, pytest 9.1.1, black, Magit, Forge, el agente de proyecto, la sesión/caché por proyecto y `gh` autenticado con `gh`.
 
 ---
 

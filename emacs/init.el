@@ -113,11 +113,8 @@ Requisitos en comentarios:
 ;; --- Comandos de IA y Python (se añaden a continuación) ---
 
 ;; ============================================================
-
 ;; Comandos de IA y Python
-
 ;; ============================================================
-
 
 ;; Se apoya en la sección anterior (gptel + DeepSeek).
 (require 'gptel)
@@ -309,13 +306,9 @@ Requisitos en comentarios:
 (define-key mi-python-map (kbd "c") #'py-repl)
 (global-set-key (kbd "C-c P") mi-python-map)
 
-
 ;; ============================================================
-
 ;; Git y GitHub
-
 ;; ============================================================
-
 
 ;; --- Magit: la interfaz de Git ---
 (use-package magit
@@ -355,16 +348,98 @@ Requisitos en comentarios:
 (define-key mi-git-map (kbd "F") #'forge-dispatch)
 (global-set-key (kbd "C-c G") mi-git-map)
 
-
 ;; ============================================================
-
 ;; Agente de proyecto
-
 ;; ============================================================
-
 
 ;; Herramientas para que la IA explore, edite y verifique el proyecto.
 ;; Todo queda confinado a la raíz del proyecto actual.
+
+;; --- Contexto y sesión por proyecto (caché local) ---
+;; DeepSeek cachea prefijos en el servidor. Para que acierte, mantenemos
+;; un contexto estable por proyecto en .emacs-deepseek/ (ignorado por Git).
+
+(defcustom ia-proyecto-contexto t
+  "Si no es nil, incluye el contexto del proyecto en todas las llamadas a gptel."
+  :type 'boolean
+  :group 'gptel)
+
+(defcustom ia-proyecto-contexto-archivo ".emacs-deepseek/contexto.md"
+  "Archivo de contexto del proyecto, relativo a su raíz."
+  :type 'string
+  :group 'gptel)
+
+(defcustom ia-proyecto-sesion t
+  "Si no es nil, el agente de proyecto guarda y reutiliza una sesión por proyecto."
+  :type 'boolean
+  :group 'gptel)
+
+(defcustom ia-proyecto-sesion-archivo ".emacs-deepseek/proyecto.md"
+  "Archivo de sesión del agente, relativo a la raíz del proyecto."
+  :type 'string
+  :group 'gptel)
+
+(defconst ia--contexto-marcador "<!-- ia-proyecto-contexto -->"
+  "Marca para detectar si el contexto ya está en el system prompt.")
+
+(defun ia--asegurar-gitignore (dir)
+  "Crea DIR/.gitignore con '*' para que el directorio no se versione."
+  (make-directory dir t)
+  (let ((gitignore (expand-file-name ".gitignore" dir)))
+    (unless (file-exists-p gitignore)
+      (with-temp-file gitignore
+        (insert "*\n")))))
+
+(defun ia--crear-contexto-proyecto (raiz archivo)
+  "Genera un contexto mínimo del proyecto en ARCHIVO."
+  (make-directory (file-name-directory archivo) t)
+  (ia--asegurar-gitignore (file-name-directory archivo))
+  (let ((arbol (ia--arbol nil 80)))
+    (with-temp-file archivo
+      (insert ia--contexto-marcador "\n")
+      (insert "# Contexto del proyecto\n\n")
+      (insert (format "Raíz: %s\n\n" raiz))
+      (insert "## Archivos\n\n")
+      (insert arbol "\n\n")
+      (insert "## Comandos\n\n")
+      (insert "- Tests: `python3 -m pytest -q`\n")
+      (insert "- Formato: `black .`\n\n")
+      (insert "## Convenciones\n\n")
+      (insert "- Añade aquí reglas del proyecto. Este archivo se ignora en Git.\n"))))
+
+(defun ia--contexto-proyecto ()
+  "Devuelve el contexto del proyecto actual, creándolo si hace falta.
+Devuelve nil si no hay proyecto o si `ia-proyecto-contexto' es nil."
+  (when (and ia-proyecto-contexto
+             (project-current nil default-directory))
+    (let* ((raiz (ia--raiz-proyecto))
+           (archivo (expand-file-name ia-proyecto-contexto-archivo raiz)))
+      (unless (file-exists-p archivo)
+        (ia--crear-contexto-proyecto raiz archivo))
+      (when (file-exists-p archivo)
+        (with-temp-buffer
+          (insert-file-contents archivo)
+          (let ((texto (buffer-string)))
+            (if (> (length texto) 12000)
+                (concat (substring texto 0 12000) "\n... [contexto truncado]")
+              texto)))))))
+
+(defun ia--gptel-request-con-contexto (orig &rest args)
+  "Añade el contexto del proyecto al system prompt, si se puede.
+Si no hay proyecto o algo falla, hace la llamada normal."
+  (let ((ctx (condition-case nil
+                 (ia--contexto-proyecto)
+               (error nil))))
+    (if (and ctx
+             (not (and (stringp gptel-system-prompt)
+                       (string-match-p (regexp-quote ia--contexto-marcador)
+                                       gptel-system-prompt))))
+        (let ((gptel-system-prompt
+               (concat (or gptel-system-prompt "") "\n\n" ctx)))
+          (apply orig args))
+      (apply orig args))))
+
+(advice-add 'gptel-request :around #'ia--gptel-request-con-contexto)
 
 (defvar-local ia--raiz-fija nil
   "Raíz fijada por el agente de proyecto en su buffer.")
@@ -708,11 +783,42 @@ Señala error si se sale de la raíz.  Si NO-EXIGIR es nil, exige que exista."
     :args (list '(:name "remoto" :type string :description "Remoto de git. Por defecto origin." :optional t))))
   "Herramientas del agente de proyecto.")
 
+(defun ia--archivo-sesion (raiz)
+  "Ruta del archivo de sesión del proyecto en RAIZ."
+  (expand-file-name ia-proyecto-sesion-archivo raiz))
+
+(defun ia--abrir-sesion (raiz)
+  "Abre o crea la sesión del proyecto y devuelve su buffer."
+  (let* ((archivo (ia--archivo-sesion raiz))
+         (dir (file-name-directory archivo)))
+    (make-directory dir t)
+    (ia--asegurar-gitignore dir)
+    (unless (file-exists-p archivo)
+      (with-temp-file archivo
+        (insert "# Sesión del proyecto\n\n")
+        (insert "<!-- Generado por ia-proyecto. No incluir claves. -->\n\n")))
+    (let ((buf (find-file-noselect archivo)))
+      (with-current-buffer buf
+        (unless (derived-mode-p 'markdown-mode 'text-mode)
+          (if (fboundp 'markdown-mode)
+              (markdown-mode)
+            (text-mode)))
+        (unless (bound-and-true-p gptel-mode)
+          (gptel-mode 1)))
+      buf)))
+
+(defun ia--guardar-sesion (&rest _)
+  "Guarda el buffer de sesión después de cada respuesta."
+  (when (buffer-file-name)
+    (save-buffer)))
+
 (defun ia-proyecto ()
   "Abre el agente de proyecto con herramientas de lectura, edición y git."
   (interactive)
   (let* ((raiz (ia--raiz-proyecto))
-         (buf (get-buffer-create "*IA: proyecto*")))
+         (buf (if ia-proyecto-sesion
+                  (ia--abrir-sesion raiz)
+                (get-buffer-create "*IA: proyecto*"))))
     (with-current-buffer buf
       (unless (bound-and-true-p gptel-mode)
         (gptel "*IA: proyecto*" nil nil nil))
@@ -730,15 +836,39 @@ Reglas:\n\
 6. No hagas push sin confirmación explícita.\n\
 7. No inventes rutas ni resultados; las rutas son relativas a la raíz." raiz))
       (setq-local header-line-format
-                  (format " Proyecto: %s | herramientas: árbol/leer/buscar/escribir/reemplazar/crear/borrar/pytest/git/commit/push " raiz))
-      (erase-buffer)
+                  (list (format " Proyecto: %s " raiz)
+                        (propertize " Ready" 'face 'success)
+                        (if (boundp 'gptel--header-line-info)
+                            gptel--header-line-info
+                          "")))
+      (unless ia-proyecto-sesion
+        (erase-buffer))
+      (goto-char (point-max))
+      (unless (bolp) (insert "\n"))
       (insert (gptel-prompt-prefix-string))
-      (goto-char (point-max)))
+      (goto-char (point-max))
+      (add-hook 'gptel-post-response-functions #'ia--guardar-sesion nil t))
     (pop-to-buffer buf)
-    (message "Agente de proyecto: %s" raiz)))
+    (message "Agente de proyecto (%s): %s"
+             (if ia-proyecto-sesion "sesión" "temporal") raiz)))
+
+(defun ia-proyecto-nueva-sesion ()
+  "Archiva la sesión actual y abre una nueva."
+  (interactive)
+  (let* ((raiz (ia--raiz-proyecto))
+         (archivo (ia--archivo-sesion raiz)))
+    (when (file-exists-p archivo)
+      (let ((backup (format "%s-%s.md"
+                            (file-name-sans-extension archivo)
+                            (format-time-string "%Y%m%d-%H%M%S"))))
+        (rename-file archivo backup)
+        (message "Sesión anterior archivada en %s" backup)))
+    (when-let ((buf (find-buffer-visiting archivo)))
+      (kill-buffer buf))
+    (ia-proyecto)))
 
 (define-key mi-ia-map (kbd "p") #'ia-proyecto)
-
+(define-key mi-ia-map (kbd "n") #'ia-proyecto-nueva-sesion)
 
 (provide 'init)
 ;;; init.el ends here

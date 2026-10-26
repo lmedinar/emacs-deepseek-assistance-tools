@@ -30,6 +30,7 @@
 - **`docs/guia.md`** — guía completa, desde cero, con ejercicios.
 - **`docs/guia.pdf`** — la misma guía en PDF, con índice y resaltado.
 - **`docs/assets/`** — hero SVG/PNG y GIF de demostración.
+- **Contexto por proyecto** — `.emacs-deepseek/` (ignorado por Git) mantiene contexto y sesión; DeepSeek cachea el prefijo y abarata las llamadas.
 - **`docs/instalacion.md`** — instalación paso a paso.
 - **`practice/`** — proyecto de práctica (calculadora con tests en rojo).
 - **`scripts/`** — instalación, token de Forge, reset y verificación.
