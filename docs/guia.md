@@ -776,7 +776,7 @@ Se abre `*IA: proyecto*`. La barra superior muestra la raíz y las herramientas.
 2. "Reemplaza la suma por una multiplicación en multiplicar"
    → proyecto_reemplazar → diff → y
 3. "Ejecuta los tests"
-   → proyecto_pytest → 8 passed
+   → proyecto_pytest → 3 fallos, 5 aprobados
 4. "Muéstrame el diff y haz commit"
    → proyecto_git diff → proyecto_commit → diff → y
 5. "Sube los cambios"
